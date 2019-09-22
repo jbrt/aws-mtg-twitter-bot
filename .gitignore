@@ -107,6 +107,9 @@ venv.bak/
 
 **.idea/
 
+# Zip files
+*.zip
+
 # Terraform
 # Local .terraform directories
 **/.terraform/*
