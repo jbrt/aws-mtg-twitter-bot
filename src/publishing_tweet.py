@@ -1,41 +1,32 @@
 # coding: utf-8
 
 """
-Publishing a Tweet when
+Publishing a Tweet when a message was put into SQS Queue
+(Lambda function triggered)
 """
 
 import logging
+import boto3
 import tweepy
 import os
+import sys
 from botocore.exceptions import ClientError
-import boto3
+from tweepy.error import TweepError
 
+# Boto clients
 S3 = boto3.client('s3')
 SSM = boto3.client('ssm')
+
 BUCKET = os.environ.get('BUCKET_NAME')
 
-# parameter = SSM.get_parameter(Name='/Prod/Db/Password', WithDecryption=True)
-# print(parameter['Parameter']['Value'])
-#
-#
-# def get_object(bucket_name, object_name):
-#     """Retrieve an object from an Amazon S3 bucket
-#
-#     :param bucket_name: string
-#     :param object_name: string
-#     :return: botocore.response.StreamingBody object. If error, return None.
-#     """
-#
-#     # Retrieve the object
-#     s3 = boto3.client('s3')
-#     try:
-#         response = s3.get_object(Bucket=bucket_name, Key=object_name)
-#     except ClientError as e:
-#         # AllAccessDisabled error == bucket or object not found
-#         logging.error(e)
-#         return None
-#     # Return an open StreamingBody object
-#     return response['Body']
+# Twitter credentials
+CONSUMER_KEY = os.environ.get('CONSUMER_KEY')
+CONSUMER_SECRET = os.environ.get('CONSUMER_SECRET')
+ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
+
+# Logger
+LOGGER = logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 def lambda_handler(event, context):
@@ -43,32 +34,43 @@ def lambda_handler(event, context):
     Default AWS Lambda Handler
     :return: (None)
     """
-    # print(event)
-    consumer_key = SSM.get_parameter(Name='/twitter/credentials/consumer_key',
-                                     WithDecryption=True)['Parameter']['Value']
-
-    consumer_secret = SSM.get_parameter(Name='/twitter/credentials/consumer_secret',
-                                        WithDecryption=True)['Parameter']['Value']
-
-    access_token = SSM.get_parameter(Name='/twitter/credentials/access_token',
-                                     WithDecryption=True)['Parameter']['Value']
-
-    access_token_secret = SSM.get_parameter(Name='/twitter/credentials/access_token_secret',
-                                            WithDecryption=True)['Parameter']['Value']
-    os.chdir('/tmp')
+    # Extract useful data from event
     image_filename = event['Records'][0]['body']
-    S3.download_file(BUCKET,
-                     image_filename,
-                     image_filename)
+    message_attributes = event['Records'][0]['messageAttributes']
 
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    # Extraction Twitter credentials from Parameter store
+    consumer_key = SSM.get_parameter(Name=CONSUMER_KEY, WithDecryption=True)['Parameter']['Value']
+    consumer_secret = SSM.get_parameter(Name=CONSUMER_SECRET, WithDecryption=True)['Parameter']['Value']
+    access_token = SSM.get_parameter(Name=ACCESS_TOKEN, WithDecryption=True)['Parameter']['Value']
+    access_token_secret = SSM.get_parameter(Name=ACCESS_TOKEN_SECRET, WithDecryption=True)['Parameter']['Value']
 
-    api = tweepy.API(auth)
-    media = api.media_upload(filename=image_filename)
+    try:
+        # Let's move where Lambda can write on disk and then download image file
+        os.chdir('/tmp')
+        S3.download_file(BUCKET,
+                         image_filename,
+                         image_filename)
+    except ClientError as error:
+        LOGGER.error(f'Error while trying to get object from S3 ({error})')
+        sys.exit(1)
 
-    tweet_text = f"Card name:  {event['Records'][0]['messageAttributes']['Name']['stringValue']} \n" \
-                 f"Set:  {event['Records'][0]['messageAttributes']['Set']['stringValue']} \n" \
-                 f"Artist:  {event['Records'][0]['messageAttributes']['Author']['stringValue']}"
-    api.update_status(status=tweet_text,
-                      media_ids=[media.media_id])
+    # Twitter
+    try:
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_token_secret)
+        api = tweepy.API(auth)
+        media = api.media_upload(filename=image_filename)
+
+        tweet_text = f"{message_attributes['Tweet']['stringValue']} \n\n" \
+                     f"Card name:  {message_attributes['Name']['stringValue']} \n" \
+                     f"Set:  {message_attributes['Set']['stringValue']} \n" \
+                     f"Artist:  {message_attributes['Author']['stringValue']}"
+
+        api.update_status(status=tweet_text, media_ids=[media.media_id])
+    except TweepError as error:
+        LOGGER.error(f'Error while trying to sending a tweet ({error}')
+
+    finally:
+        # Tidy up after sending tweet
+        os.remove(image_filename)
+        S3.delete_object(Bucket=BUCKET, Key=image_filename)
