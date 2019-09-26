@@ -77,6 +77,20 @@ class RandomCardFromAGivenSet(Strategy):
                                  .all())
 
 
+class RandomCardFromMagaliVilleneuve(Strategy):
+    """
+    Return a random card design by Magali Villeneuve
+    """
+
+    def __str__(self):
+        return f"Let's fetch a card from Magali Villeneuve (@Cathaoir1), " \
+               f"so talented !"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(artist="Magali Villeneuve")
+                                 .all())
+
+
 class RandomRareCardFromAGivenSet(Strategy):
     """
     Return a random rare card from a given set
@@ -168,7 +182,8 @@ def random_strategy() -> Strategy:
     strategies = [FullyRandomCard(),
                   RandomRareCard(),
                   RandomUncommonCard(),
-                  RandomRareCardFromInnistrad(),]
+                  RandomRareCardFromInnistrad(),
+                  RandomCardFromMagaliVilleneuve()]
     return random.choice(strategies)
 
 
@@ -199,7 +214,7 @@ def lambda_handler(event, context):
                                     'DataType': 'String'},
                          'Set': {'StringValue': card.set_name,
                                  'DataType': 'String'},
-                         'Tweet': {'StringValue': f'{strategy}',
+                         'Tweet': {'StringValue': f'{strategy} #Magic #MTG !',
                                    'DataType': 'String'},
                      })
 
