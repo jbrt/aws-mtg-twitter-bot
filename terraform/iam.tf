@@ -1,5 +1,52 @@
 # IAM Role
 
+data "aws_iam_policy_document" "fetching_card_rights" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::${var.bucket_name}/*", ]
+  }
+
+  statement {
+    actions   = ["sqs:SendMessage"]
+    resources = [module.sqs.this_sqs_queue_arn, ]
+  }
+}
+
+data "aws_iam_policy_document" "publishing_tweet_rights" {
+  statement {
+    actions   = ["s3:GetObject", "s3:DeleteObject"]
+    resources = ["arn:aws:s3:::${var.bucket_name}/*", ]
+  }
+
+  statement {
+    actions   = ["sqs:ChangeMessageVisibility", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:ReceiveMessage"]
+    resources = [module.sqs.this_sqs_queue_arn, ]
+  }
+
+  statement {
+    actions   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"]
+    resources = ["*", ]
+  }
+}
+
+data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
+  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Generated IAM policy object
+resource "aws_iam_policy" "fetching-card-policy" {
+  name   = "MTGBot-Fetching-card-righs"
+  path   = "/"
+  policy = data.aws_iam_policy_document.fetching_card_rights.json
+}
+
+resource "aws_iam_policy" "publishing-tweet-policy" {
+  name   = "MTGBot-Publishing-tweet-righs"
+  path   = "/"
+  policy = data.aws_iam_policy_document.publishing_tweet_rights.json
+}
+
+
 #################################
 # Role for fetching card function
 #################################
@@ -26,64 +73,9 @@ EOF
   tags = local.tags
 }
 
-# Attaching managed policy for CloudWatch Logging
-data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-# Rights for S3
-resource "aws_iam_policy" "S3PutObjectPolicy" {
-  name = "${var.lambda_fetching_card_name}-S3PutObject"
-  description = "Authorize Lambda function for put S3 objects"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "Stmt1569162938455",
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${var.bucket_name}/*"
-    }
-  ]
-}
-EOF
-}
-
-# Rights for SQS
-resource "aws_iam_policy" "SQSSendMessagePolicy" {
-  name        = "${var.lambda_fetching_card_name}-SQSSendMessage"
-  description = "Authorize Lambda function for put S3 objects"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "Stmt1569163258326",
-      "Action": [
-        "sqs:SendMessage"
-      ],
-      "Effect": "Allow",
-      "Resource": "${module.sqs.this_sqs_queue_arn}"
-    }
-  ]
-}
-EOF
-}
-
-# Attach policies
-resource "aws_iam_role_policy_attachment" "sqs-sendmessage--role-policy-attach" {
+resource "aws_iam_role_policy_attachment" "fetching-card-policy-attach" {
   role = aws_iam_role.fetching_card_role.name
-  policy_arn = aws_iam_policy.SQSSendMessagePolicy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "s3bucket-role-policy-attach" {
-  role = aws_iam_role.fetching_card_role.name
-  policy_arn = aws_iam_policy.S3PutObjectPolicy.arn
+  policy_arn = aws_iam_policy.fetching-card-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "lambda-basic-exec-role-policy-attach" {
@@ -118,41 +110,12 @@ EOF
   tags = local.tags
 }
 
-resource "aws_iam_policy" "SQSLambdaPolicy" {
-  name        = "${var.lambda_publishing_tweet_name}-SQSLambda"
-  description = "Authorize Lambda function for consuming SQS Msg"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "Stmt1569163258326",
-      "Action": [
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Effect": "Allow",
-      "Resource": "${module.sqs.this_sqs_queue_arn}"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "publishing-tweet-policy-attach" {
+  role       = aws_iam_role.publishing_tweet_role.name
+  policy_arn = aws_iam_policy.publishing-tweet-policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ps3bucket-role-policy-attach" {
-  role = aws_iam_role.publishing_tweet_role.name
-  policy_arn = aws_iam_policy.S3PutObjectPolicy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "plambda-basic-exec-role-policy-attach" {
-  role = aws_iam_role.publishing_tweet_role.name
+resource "aws_iam_role_policy_attachment" "publishing-tweet-lambda-basic-exec-role-policy-attach" {
+  role       = aws_iam_role.publishing_tweet_role.name
   policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
-}
-
-resource "aws_iam_role_policy_attachment" "psqs-lambda-role-policy-attach" {
-  role = aws_iam_role.publishing_tweet_role.name
-  policy_arn = aws_iam_policy.SQSLambdaPolicy.arn
 }

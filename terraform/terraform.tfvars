@@ -4,3 +4,10 @@ lambda_fetching_card_name    = "MTGBot_fetching_card"
 lambda_publishing_tweet_name = "MTGBot_publishing_tweet"
 bucket_name                  = "mtgbot-image-storage"
 queue_name                   = "mtgbot_queue"
+
+# Twitter credentials
+#
+# consumer_key = ""
+# consumer_secret = ""
+# access_token = ""
+# access_token_secret = ""
