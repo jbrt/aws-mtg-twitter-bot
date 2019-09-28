@@ -28,7 +28,11 @@ ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
 ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
 
 # Logger
-LOGGER = logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+LOGGER.addHandler(stream_handler)
 
 
 def lambda_handler(event, context):
