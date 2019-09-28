@@ -118,6 +118,9 @@ venv.bak/
 *.tfstate
 *.tfstate.*
 
+# Secret files
+*secret*
+
 # Crash log files
 crash.log
 
