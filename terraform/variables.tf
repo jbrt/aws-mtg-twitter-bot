@@ -37,11 +37,29 @@ variable "queue_name" {
   description = "Name of the S3 Bucket"
 }
 
+# Secrets for Tweeter
+variable "consumer_key" {
+  description = "Twitter API credential Consumer key"
+}
+
+variable "consumer_secret" {
+  description = "Twitter API credential consumer secret"
+}
+
+variable "access_token" {
+  description = "Twitter API credential access token"
+}
+
+variable "access_token_secret" {
+  description = "Twitter API credential access token secret"
+}
+
 # Tags
 
 locals {
   tags = {
     Terraform   = "true"
     Environment = "dev"
+    Project     = "MTG-Twitter-Bot"
   }
 }
