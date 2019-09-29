@@ -77,6 +77,32 @@ class RandomCardFromAGivenSet(Strategy):
                                  .all())
 
 
+class RandomCardFromChrisRallis(Strategy):
+    """
+    Return a random card design by Chris Rallis
+    """
+
+    def __str__(self):
+        return f"Let's fetch a card from Chris Rallis, I love this artist"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(artist="Chris Rallis")
+                                 .all())
+
+
+class RandomCardFromJohannesVoss(Strategy):
+    """
+    Return a random card design by Johannes Voss
+    """
+
+    def __str__(self):
+        return f"Let's fetch a card from Johannes Voss, I love this artist"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(artist="Johannes Voss")
+                                 .all())
+
+
 class RandomCardFromMagaliVilleneuve(Strategy):
     """
     Return a random card design by Magali Villeneuve
@@ -219,13 +245,15 @@ def random_strategy() -> Strategy:
     :return: (Strategy) returned a random Strategy
     """
     strategies = [FullyRandomCard(),
-                  RandomRareCard(),
+                  RandomCardFromMagaliVilleneuve(),
+                  RandomCardFromChrisRallis(),
+                  RandomCardFromJohannesVoss(),
                   RandomMythicCard(),
-                  RandomUncommonCard(),
-                  RandomRareCardFromInnistrad(),
                   RandomPlaneswalkerCard(),
-                  RandomVampireCard(),
-                  RandomCardFromMagaliVilleneuve()]
+                  RandomRareCard(),
+                  RandomRareCardFromInnistrad(),
+                  RandomUncommonCard(),
+                  RandomVampireCard()]
     return random.choice(strategies)
 
 
