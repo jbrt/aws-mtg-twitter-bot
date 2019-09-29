@@ -136,6 +136,19 @@ class RandomMythicCard(Strategy):
                                  .all())
 
 
+class RandomPlaneswalkerCard(Strategy):
+    """
+    Return a random Planeswalker card
+    """
+
+    def __str__(self):
+        return "Let's fetch a random Planeswalker card"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(type="Planeswalker")
+                                 .all())
+
+
 class RandomRareCardFromInnistrad(Strategy):
     """
     Return a random rare card from Innistrad sets
@@ -147,6 +160,19 @@ class RandomRareCardFromInnistrad(Strategy):
     def fetch_a_card(self) -> Card:
         return random.choice(Card.where(set='isd|soi|emn')
                                  .where(rarity='Rare|Mythic Rare')
+                                 .all())
+
+
+class RandomVampireCard(Strategy):
+    """
+    Return a random Vampire card
+    """
+
+    def __str__(self):
+        return "Let's fetch a random Vampire card"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(subtypes="Vampire")
                                  .all())
 
 
@@ -197,6 +223,8 @@ def random_strategy() -> Strategy:
                   RandomMythicCard(),
                   RandomUncommonCard(),
                   RandomRareCardFromInnistrad(),
+                  RandomPlaneswalkerCard(),
+                  RandomVampireCard(),
                   RandomCardFromMagaliVilleneuve()]
     return random.choice(strategies)
 
