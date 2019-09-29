@@ -123,6 +123,19 @@ class RandomRareCard(Strategy):
                                  .all())
 
 
+class RandomMythicCard(Strategy):
+    """
+    Return a random mythic card from a random set
+    """
+
+    def __str__(self):
+        return "Let's fetch a random Mythic card from a random set"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(rarity='Mythic Rare')
+                                 .all())
+
+
 class RandomRareCardFromInnistrad(Strategy):
     """
     Return a random rare card from Innistrad sets
@@ -181,6 +194,7 @@ def random_strategy() -> Strategy:
     """
     strategies = [FullyRandomCard(),
                   RandomRareCard(),
+                  RandomMythicCard(),
                   RandomUncommonCard(),
                   RandomRareCardFromInnistrad(),
                   RandomCardFromMagaliVilleneuve()]
