@@ -117,6 +117,19 @@ class RandomCardFromMagaliVilleneuve(Strategy):
                                  .all())
 
 
+class RandomCardFromWillianMurai(Strategy):
+    """
+    Return a random card design by Willian Murai
+    """
+
+    def __str__(self):
+        return f"Let's fetch a card from Willian Murai, I love this artist"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(artist="Willian Murai")
+                                 .all())
+
+
 class RandomRareCardFromAGivenSet(Strategy):
     """
     Return a random rare card from a given set
@@ -248,6 +261,7 @@ def random_strategy() -> Strategy:
                   RandomCardFromMagaliVilleneuve(),
                   RandomCardFromChrisRallis(),
                   RandomCardFromJohannesVoss(),
+                  RandomCardFromWillianMurai(),
                   RandomMythicCard(),
                   RandomPlaneswalkerCard(),
                   RandomRareCard(),
