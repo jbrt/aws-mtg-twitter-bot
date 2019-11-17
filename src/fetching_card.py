@@ -77,6 +77,7 @@ class RandomCardFromAGivenSet(Strategy):
                                  .all())
 
 
+<<<<<<< Updated upstream
 class RandomCardFromChrisRallis(Strategy):
     """
     Return a random card design by Chris Rallis
@@ -87,6 +88,19 @@ class RandomCardFromChrisRallis(Strategy):
 
     def fetch_a_card(self) -> Card:
         return random.choice(Card.where(artist="Chris Rallis")
+=======
+class RandomCardFromChaseStone(Strategy):
+    """
+    Return a random card design by Chase Stone
+    """
+
+    def __str__(self):
+        return f"Let's fetch a card from Chase Stone" \
+               f"I love this artist !"
+
+    def fetch_a_card(self) -> Card:
+        return random.choice(Card.where(artist="Chase Stone")
+>>>>>>> Stashed changes
                                  .all())
 
 
@@ -96,7 +110,12 @@ class RandomCardFromJohannesVoss(Strategy):
     """
 
     def __str__(self):
+<<<<<<< Updated upstream
         return f"Let's fetch a card from Johannes Voss, I love this artist"
+=======
+        return f"Let's fetch a card from Johannes Voss (@algenpfleger), " \
+               f"I love this artist !"
+>>>>>>> Stashed changes
 
     def fetch_a_card(self) -> Card:
         return random.choice(Card.where(artist="Johannes Voss")
@@ -266,8 +285,14 @@ def random_strategy() -> Strategy:
                   RandomPlaneswalkerCard(),
                   RandomRareCard(),
                   RandomRareCardFromInnistrad(),
+<<<<<<< Updated upstream
                   RandomUncommonCard(),
                   RandomVampireCard()]
+=======
+                  RandomCardFromChaseStone(),
+                  RandomCardFromJohannesVoss(),
+                  RandomCardFromMagaliVilleneuve()]
+>>>>>>> Stashed changes
     return random.choice(strategies)
 
 
