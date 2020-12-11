@@ -8,26 +8,20 @@ import abc
 import boto3
 import logging
 import os
-import random
 import requests
-from tenacity import retry, stop_after_attempt
+import secrets
+
+from tenacity import retry, stop_after_attempt, wait_random
 from mtgsdk import Card
 from mtgsdk import Set
 
 # Define the global logger
-LOGGER = logging.getLogger('fetching-card')
+LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
-LOGGER.addHandler(stream_handler)
 
 # Extract AWS resources from Lambda environment variables
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 QUEUE_URL = os.environ.get('QUEUE_URL')
-
-# AWS SDK
-S3 = boto3.client('s3')
-SQS = boto3.client('sqs')
 
 # Constant
 NUMBER_OF_RETRIES = 30
@@ -56,8 +50,8 @@ class FullyRandomCard(Strategy):
         return "Let's fetch a random card from a random set"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set=random.choice(Set.all()).code)
-                                 .all())
+        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
+                              .all())
 
 
 class RandomCardFromAGivenSet(Strategy):
@@ -66,15 +60,14 @@ class RandomCardFromAGivenSet(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a random card from a given set " \
-               f"(here: {self._card_set})"
+        return f"Let's fetch a random card from a given set (here: {self._card_set})"
 
     def __init__(self, card_set: str):
         self._card_set = card_set
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set=self._card_set)
-                                 .all())
+        return secrets.choice(Card.where(set=self._card_set)
+                              .all())
 
 
 class RandomCardFromChrisRallis(Strategy):
@@ -83,10 +76,11 @@ class RandomCardFromChrisRallis(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a card from Chris Rallis, I love this artist"
+        return "Let's fetch a card from Chris Rallis, I love this artist"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(artist="Chris Rallis"))
+        return secrets.choice(Card.where(artist="Chris Rallis")
+                              .all())
 
 
 class RandomCardFromChaseStone(Strategy):
@@ -95,12 +89,11 @@ class RandomCardFromChaseStone(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a card from Chase Stone" \
-               f"I love this artist !"
+        return "Let's fetch a card from Chase Stone I love this artist !"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(artist="Chase Stone")
-                                 .all())
+        return secrets.choice(Card.where(artist="Chase Stone")
+                              .all())
 
 
 class RandomCardFromJohannesVoss(Strategy):
@@ -109,12 +102,11 @@ class RandomCardFromJohannesVoss(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a card from Johannes Voss (@algenpfleger), " \
-               f"I love this artist !"
+        return "Let's fetch a card from Johannes Voss (@algenpfleger), I love this artist !"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(artist="Johannes Voss")
-                                 .all())
+        return secrets.choice(Card.where(artist="Johannes Voss")
+                              .all())
 
 
 class RandomCardFromMagaliVilleneuve(Strategy):
@@ -123,12 +115,11 @@ class RandomCardFromMagaliVilleneuve(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a card from Magali Villeneuve (@Cathaoir1), " \
-               f"so talented !"
+        return "Let's fetch a card from Magali Villeneuve (@Cathaoir1), so talented !"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(artist="Magali Villeneuve")
-                                 .all())
+        return secrets.choice(Card.where(artist="Magali Villeneuve")
+                              .all())
 
 
 class RandomCardFromWillianMurai(Strategy):
@@ -137,11 +128,11 @@ class RandomCardFromWillianMurai(Strategy):
     """
 
     def __str__(self):
-        return f"Let's fetch a card from Willian Murai, I love this artist"
+        return "Let's fetch a card from Willian Murai, I love this artist"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(artist="Willian Murai")
-                                 .all())
+        return secrets.choice(Card.where(artist="Willian Murai")
+                              .all())
 
 
 class RandomRareCardFromAGivenSet(Strategy):
@@ -157,9 +148,9 @@ class RandomRareCardFromAGivenSet(Strategy):
         self._card_set = card_set
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set=self._card_set)
-                                 .where(rarity='Rare')
-                                 .all())
+        return secrets.choice(Card.where(set=self._card_set)
+                              .where(rarity='Rare')
+                              .all())
 
 
 class RandomRareCard(Strategy):
@@ -171,9 +162,9 @@ class RandomRareCard(Strategy):
         return "Let's fetch a random Rare card from a random set"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set=random.choice(Set.all()).code)
-                                 .where(rarity='Rare')
-                                 .all())
+        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
+                              .where(rarity='Rare')
+                              .all())
 
 
 class RandomMythicCard(Strategy):
@@ -185,8 +176,9 @@ class RandomMythicCard(Strategy):
         return "Let's fetch a random Mythic card from a random set"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(rarity='Mythic Rare')
-                                 .all())
+        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
+                              .where(rarity='Mythic Rare')
+                              .all())
 
 
 class RandomPlaneswalkerCard(Strategy):
@@ -198,8 +190,8 @@ class RandomPlaneswalkerCard(Strategy):
         return "Let's fetch a random Planeswalker card"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(type="Planeswalker")
-                                 .all())
+        return secrets.choice(Card.where(type="Planeswalker")
+                              .all())
 
 
 class RandomRareCardFromInnistrad(Strategy):
@@ -211,9 +203,9 @@ class RandomRareCardFromInnistrad(Strategy):
         return "Let's fetch a random rare cards from Innistrad sets"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set='isd|soi|emn')
-                                 .where(rarity='Rare|Mythic Rare')
-                                 .all())
+        return secrets.choice(Card.where(set='isd|soi|emn')
+                              .where(rarity='Rare|Mythic Rare')
+                              .all())
 
 
 class RandomVampireCard(Strategy):
@@ -225,8 +217,8 @@ class RandomVampireCard(Strategy):
         return "Let's fetch a random Vampire card"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(subtypes="Vampire")
-                                 .all())
+        return secrets.choice(Card.where(subtypes="Vampire")
+                              .all())
 
 
 class RandomUncommonCard(Strategy):
@@ -238,9 +230,9 @@ class RandomUncommonCard(Strategy):
         return "Let's fetch a random Uncommon card from a random set"
 
     def fetch_a_card(self) -> Card:
-        return random.choice(Card.where(set=random.choice(Set.all()).code)
-                                 .where(rarity='Uncommon')
-                                 .all())
+        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
+                              .where(rarity='Uncommon')
+                              .all())
 
 
 class MTGCardFetcher:
@@ -256,12 +248,11 @@ class MTGCardFetcher:
         """
         self._strategy = strategy
 
-    @retry(reraise=True, stop=stop_after_attempt(NUMBER_OF_RETRIES))
+    @retry(reraise=True, wait=wait_random(min=3, max=6), stop=stop_after_attempt(NUMBER_OF_RETRIES))
     def get_card(self) -> Card:
         returned_card = self._strategy.fetch_a_card()
         if returned_card.image_url is None:
-            LOGGER.error(f'No image URL for card {returned_card.name}, '
-                         f'{returned_card.set_name}, pick a new one.')
+            LOGGER.error(f'No image URL for card {returned_card.name}, {returned_card.set_name}, pick a new one.')
             raise ValueError
         return returned_card
 
@@ -282,7 +273,7 @@ def random_strategy() -> Strategy:
                   RandomCardFromChaseStone(),
                   RandomCardFromJohannesVoss(),
                   RandomCardFromMagaliVilleneuve()]
-    return random.choice(strategies)
+    return secrets.choice(strategies)
 
 
 def lambda_handler(event, context):
@@ -290,18 +281,21 @@ def lambda_handler(event, context):
     Default AWS Lambda Handler
     :return: (None)
     """
+    s3 = boto3.client('s3')
+    sqs = boto3.client('sqs')
+
     LOGGER.info('Starting this Lambda by fetching a MTG card')
     strategy = random_strategy()
     card = MTGCardFetcher(strategy=strategy).get_card()
     card_key = f'{card.id}.jpg'
 
     LOGGER.info(f'Saving card image ({card.name}) into S3')
-    S3.put_object(Bucket=BUCKET_NAME,
+    s3.put_object(Bucket=BUCKET_NAME,
                   Key=card_key,
                   Body=requests.get(f'{card.image_url}').content)
 
-    LOGGER.info(f'Saving meta-data into SQS')
-    SQS.send_message(QueueUrl=QUEUE_URL,
+    LOGGER.info('Saving meta-data into SQS')
+    sqs.send_message(QueueUrl=QUEUE_URL,
                      MessageBody=card_key,
                      MessageAttributes={
                          'S3Bucket': {'StringValue': BUCKET_NAME,
@@ -315,7 +309,3 @@ def lambda_handler(event, context):
                          'Tweet': {'StringValue': f'{strategy} #Magic #MTG !',
                                    'DataType': 'String'},
                      })
-
-
-if __name__ == '__main__':
-    lambda_handler(event=None, context=None)

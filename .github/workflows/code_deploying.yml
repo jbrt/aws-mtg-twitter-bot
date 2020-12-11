@@ -1,0 +1,92 @@
+name: Code deployment
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  code_deploying:
+    name: Test code and evaluate overall quality
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TF_VAR_consumer_key: ${{ secrets.CONSUMER_KEY }}
+      TF_VAR_consumer_secret: ${{ secrets.CONSUMER_SECRET }}
+      TF_VAR_access_token: ${{ secrets.ACCESS_TOKEN }}
+      TF_VAR_access_token_secret: ${{ secrets.ACCESS_TOKEN_SECRET }}
+      LAYER_PATH: "layer/python/lib/python3.8/site-packages/"
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install needed files for Lambda layer
+        run: |
+          mkdir -p $LAYER_PATH
+          pip install -r requirements.txt -t $LAYER_PATH
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.14.2
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd terraform
+          terraform init -backend-config="bucket=${{ secrets.S3_BUCKET }}" -backend-config="key=${{ secrets.S3_KEY }}"
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: |
+          cd terraform
+          terraform plan -no-color
+        continue-on-error: false
+
+      - name: Terraform Plan Status
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Update Pull Request
+        uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            <details><summary>Show Plan</summary>
+            \`\`\`${process.env.PLAN}\`\`\`
+            </details>
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: terraform apply -auto-approve

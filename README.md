@@ -2,6 +2,9 @@
 
 A Magic the Gathering twitter bot based on AWS resources
 
+[![codecov](https://codecov.io/gh/jbrt/aws-mtg-twitter-bot/branch/master/graph/badge.svg?token=O2XrD8oAsH)](https://codecov.io/gh/jbrt/aws-mtg-twitter-bot)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jbrt_aws-mtg-twitter-bot&metric=alert_status)](https://sonarcloud.io/dashboard?id=jbrt_aws-mtg-twitter-bot)
+
 ## Description
 
 This project is a Twitter Bot based on AWS resources that will publish tweets 
@@ -21,7 +24,7 @@ You can see the result here: https://twitter.com/BotMTGCards
 ### Prerequisites
 
 Before launching Terraform you need to download Python dependencies. So 
-please read the README file under layer/python/lib/python3.7/site-packages 
+please read the README file under layer/python/lib/python3.8/site-packages 
 before going ahead.
 
 **Please fill the terraform.tfvars file with your Twitter credentials**
