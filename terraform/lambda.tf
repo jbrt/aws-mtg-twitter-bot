@@ -6,7 +6,7 @@
 
 data "archive_file" "layer_zip" {
   type        = "zip"
-  source_dir  = "../src/layer"
+  source_dir  = "../layer"
   output_path = "layer.zip"
 }
 
@@ -25,7 +25,7 @@ data "archive_file" "publishing_tweet_zip" {
 resource "aws_lambda_layer_version" "lambda_layer" {
   filename            = "layer.zip"
   layer_name          = "MTGBot_BaseLibraryLayer"
-  compatible_runtimes = ["python3.7"]
+  compatible_runtimes = ["python3.8"]
 }
 
 ##########################################
@@ -40,7 +40,7 @@ resource "aws_lambda_function" "fetching_card" {
   role             = aws_iam_role.fetching_card_role.arn
   description      = "Extract one random card from MTG API and store it"
   handler          = "fetching_card.lambda_handler"
-  runtime          = "python3.7"
+  runtime          = "python3.8"
   timeout          = var.lambda_timeout
 
   environment {
@@ -65,7 +65,7 @@ resource "aws_lambda_function" "publishing_tweet" {
   role             = aws_iam_role.publishing_tweet_role.arn
   description      = "Send a tweet talking about a MTG card"
   handler          = "publishing_tweet.lambda_handler"
-  runtime          = "python3.7"
+  runtime          = "python3.8"
   timeout          = var.lambda_timeout
 
   environment {
