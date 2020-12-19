@@ -7,11 +7,11 @@ Publishing a Tweet when a message was put into SQS Queue
 
 import logging
 import os
+import tempfile
 
 import boto3
 import tweepy
 
-from s3streaming import s3_open
 from botocore.exceptions import ClientError
 from tweepy.error import TweepError
 
@@ -49,7 +49,9 @@ def lambda_handler(event, context):
 
     try:
         LOGGER.info(f'Downloading image {image_filename} from S3')
-        with s3_open(f's3://{BUCKET}/{image_filename}', boto_session=boto3.session.Session()) as image_file:
+        with tempfile.TemporaryFile(mode='wb') as image_file:
+            s3.download_fileobj(BUCKET, image_filename, image_file)
+
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
             auth.set_access_token(access_token, access_token_secret)
             api = tweepy.API(auth)
