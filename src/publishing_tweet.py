@@ -25,7 +25,7 @@ ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
 ACCESS_TOKEN_SECRET = os.environ.get('ACCESS_TOKEN_SECRET')
 
 # Logger
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('publishing_tweet')
 LOGGER.setLevel(logging.DEBUG)
 
 
@@ -49,7 +49,7 @@ def lambda_handler(event, context):
 
     try:
         LOGGER.info(f'Downloading image {image_filename} from S3')
-        with tempfile.TemporaryFile(mode='wb') as image_file:
+        with tempfile.TemporaryFile(mode='wb+') as image_file:
             s3.download_fileobj(BUCKET, image_filename, image_file)
 
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
