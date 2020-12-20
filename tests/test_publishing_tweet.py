@@ -7,9 +7,10 @@ from botocore.exceptions import ClientError
 from tweepy.error import TweepError
 
 
+@mock.patch('src.publishing_tweet.patch_all')
 @mock.patch('src.publishing_tweet.tweepy')
 @mock.patch('src.publishing_tweet.boto3')
-def test_publishing_when_everything_is_ok(mock_boto, mock_tweepy, lambda_event_publisher):
+def test_publishing_when_everything_is_ok(mock_boto, mock_tweepy, mock_patch, lambda_event_publisher):
     # A dumb test where we just check if everything is well called
     mock_s3 = mock.MagicMock()
     mock_s3.download_fileobj.side_effect = None
@@ -28,8 +29,9 @@ def test_publishing_when_everything_is_ok(mock_boto, mock_tweepy, lambda_event_p
     mock_s3.delete_object.assert_called_once()
 
 
+@mock.patch('src.publishing_tweet.patch_all')
 @mock.patch('src.publishing_tweet.boto3')
-def test_publishing_when_an_error_occur_with_s3_dl(mock_boto, lambda_event_publisher, caplog):
+def test_publishing_when_an_error_occur_with_s3_dl(mock_boto, mock_patch, lambda_event_publisher, caplog):
     mock_s3 = mock.MagicMock()
     mock_s3.download_fileobj.side_effect = ClientError(error_response={}, operation_name='')
     mock_s3.delete_object.side_effect = None
@@ -45,9 +47,10 @@ def test_publishing_when_an_error_occur_with_s3_dl(mock_boto, lambda_event_publi
     mock_s3.delete_object.assert_called_once()
 
 
+@mock.patch('src.publishing_tweet.patch_all')
 @mock.patch('src.publishing_tweet.tweepy')
 @mock.patch('src.publishing_tweet.boto3')
-def test_publishing_when_an_error_occur_with_tweepy_api(mock_boto, mock_tweepy, lambda_event_publisher, caplog):
+def test_publishing_when_an_error_occur_with_tweepy_api(mock_boto, mock_tweepy, mock_patch, lambda_event_publisher, caplog):
     mock_s3 = mock.MagicMock()
     mock_s3.download_fileobj.side_effect = None
     mock_ssm = mock.MagicMock()

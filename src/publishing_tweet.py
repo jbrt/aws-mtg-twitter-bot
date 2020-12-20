@@ -12,6 +12,7 @@ import tempfile
 import boto3
 import tweepy
 
+from aws_xray_sdk.core import patch_all
 from botocore.exceptions import ClientError
 from tweepy.error import TweepError
 
@@ -34,6 +35,8 @@ def lambda_handler(event, context):
     Default AWS Lambda Handler
     :return: (None)
     """
+    patch_all()
+
     s3 = boto3.client('s3')
     ssm = boto3.client('ssm')
 
