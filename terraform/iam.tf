@@ -71,7 +71,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fetching-card-policy-attach" {
   for_each = toset([
-    "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole",
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess",
     aws_iam_policy.fetching-card-policy.arn
   ])
@@ -108,7 +108,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "publishing-card-policy-attach" {
   for_each = toset([
-    "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole",
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess",
     aws_iam_policy.publishing-tweet-policy.arn
   ])
