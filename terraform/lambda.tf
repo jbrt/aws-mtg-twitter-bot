@@ -50,6 +50,10 @@ resource "aws_lambda_function" "fetching_card" {
     }
   }
 
+  tracing_config {
+    mode = "Active"
+  }
+
   tags = local.tags
 }
 
@@ -77,6 +81,10 @@ resource "aws_lambda_function" "publishing_tweet" {
       ACCESS_TOKEN        = aws_ssm_parameter.access_token.name
       ACCESS_TOKEN_SECRET = aws_ssm_parameter.access_token_secret.name
     }
+  }
+
+  tracing_config {
+    mode = "Active"
   }
 
   tags = local.tags

@@ -124,10 +124,11 @@ def test_random_strategy():
     assert isinstance(strategy, Strategy)
 
 
+@mock.patch('src.fetching_card.patch_all')
 @mock.patch('src.fetching_card.MTGCardFetcher')
 @mock.patch('src.fetching_card.requests')
 @mock.patch('src.fetching_card.boto3')
-def test_lambda_handler_when_everything_is_fine(mock_boto, mock_requests, mock_fetcher, lambda_event_publisher):
+def test_lambda_handler_when_everything_is_fine(mock_boto, mock_requests, mock_fetcher, mock_patch, lambda_event_publisher):
     mock_s3 = mock.MagicMock()
     mock_sqs = mock.MagicMock()
     mock_boto.client.side_effect = [mock_s3, mock_sqs]

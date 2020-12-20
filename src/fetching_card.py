@@ -11,12 +11,13 @@ import os
 import requests
 import secrets
 
+from aws_xray_sdk.core import patch_all
 from tenacity import retry, stop_after_attempt, wait_random
 from mtgsdk import Card
 from mtgsdk import Set
 
 # Define the global logger
-LOGGER = logging.getLogger()
+LOGGER = logging.getLogger('fetching_card')
 LOGGER.setLevel(logging.DEBUG)
 
 # Extract AWS resources from Lambda environment variables
@@ -281,6 +282,8 @@ def lambda_handler(event, context):
     Default AWS Lambda Handler
     :return: (None)
     """
+    patch_all()
+
     s3 = boto3.client('s3')
     sqs = boto3.client('sqs')
 

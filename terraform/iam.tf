@@ -29,10 +29,6 @@ data "aws_iam_policy_document" "publishing_tweet_rights" {
   }
 }
 
-data "aws_iam_policy" "AWSLambdaBasicExecutionRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
 # Generated IAM policy object
 resource "aws_iam_policy" "fetching-card-policy" {
   name   = "MTGBot-Fetching-card-righs"
@@ -74,15 +70,15 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "fetching-card-policy-attach" {
-  role = aws_iam_role.fetching_card_role.name
-  policy_arn = aws_iam_policy.fetching-card-policy.arn
-}
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole",
+    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess",
+    aws_iam_policy.fetching-card-policy.arn
+  ])
 
-resource "aws_iam_role_policy_attachment" "lambda-basic-exec-role-policy-attach" {
-  role = aws_iam_role.fetching_card_role.name
-  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
+  role       = aws_iam_role.fetching_card_role.name
+  policy_arn = each.value
 }
-
 
 #################################
 # Role for fetching card function
@@ -110,12 +106,13 @@ EOF
   tags = local.tags
 }
 
-resource "aws_iam_role_policy_attachment" "publishing-tweet-policy-attach" {
-  role       = aws_iam_role.publishing_tweet_role.name
-  policy_arn = aws_iam_policy.publishing-tweet-policy.arn
-}
+resource "aws_iam_role_policy_attachment" "publishing-card-policy-attach" {
+  for_each = toset([
+    "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole",
+    "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess",
+    aws_iam_policy.publishing-tweet-policy.arn
+  ])
 
-resource "aws_iam_role_policy_attachment" "publishing-tweet-lambda-basic-exec-role-policy-attach" {
   role       = aws_iam_role.publishing_tweet_role.name
-  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
+  policy_arn = each.value
 }
