@@ -5,11 +5,16 @@ A Lambda function based on MTG SDK (Magic The Gathering)
 """
 
 import abc
-import boto3
 import logging
 import os
-import requests
 import secrets
+
+from dataclasses import dataclass
+from typing import List
+
+import boto3
+import requests
+import scrython
 
 from aws_xray_sdk.core import patch_all
 from tenacity import retry, stop_after_attempt, wait_random
@@ -28,13 +33,46 @@ QUEUE_URL = os.environ.get('QUEUE_URL')
 NUMBER_OF_RETRIES = 30
 
 
+@dataclass
+class MTGCard:
+    """
+    Dataclass for aggregating MTG card info
+    """
+    name: str
+    artist: str
+    rarity: str
+    set: str
+    set_name: str
+    subtypes: List[str]
+    type: str
+    card_data: bytes
+    card_filename: str
+
+
 class Strategy(metaclass=abc.ABCMeta):
     """
     Interface for the Strategy pattern
     """
 
+    def _fetch_from_scryfall(self, card: Card) -> MTGCard:
+        """
+        Fetch card illustration from ScryFall website (which have highres illustration)
+        :param card: (Card) card extracted from MTG SDK
+        :return: (MTGCard)
+        """
+        scry_card = scrython.cards.Named(exact=card.name, set=card.set)
+        return MTGCard(name=card.name,
+                       artist=card.artist,
+                       rarity=card.rarity,
+                       set=card.set,
+                       set_name=card.set_name,
+                       subtypes=card.subtypes,
+                       type=card.type,
+                       card_data=requests.get(f'{scry_card.image_uris(image_type="png")}').content,
+                       card_filename=f'{scry_card.id()}.png')
+
     @abc.abstractmethod
-    def fetch_a_card(self) -> Card:
+    def fetch_a_card(self) -> MTGCard:
         """
         Abstract method that will return a card (by using the right strategy)
         :return: (Card)
@@ -50,9 +88,9 @@ class FullyRandomCard(Strategy):
     def __str__(self):
         return "Let's fetch a random card from a random set"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=secrets.choice(Set.all()).code).all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromAGivenSet(Strategy):
@@ -66,9 +104,9 @@ class RandomCardFromAGivenSet(Strategy):
     def __init__(self, card_set: str):
         self._card_set = card_set
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=self._card_set)
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=self._card_set).all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromChrisRallis(Strategy):
@@ -79,9 +117,9 @@ class RandomCardFromChrisRallis(Strategy):
     def __str__(self):
         return "Let's fetch a card from Chris Rallis, I love this artist"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(artist="Chris Rallis")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(artist="Chris Rallis").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromChaseStone(Strategy):
@@ -92,9 +130,9 @@ class RandomCardFromChaseStone(Strategy):
     def __str__(self):
         return "Let's fetch a card from Chase Stone I love this artist !"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(artist="Chase Stone")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(artist="Chase Stone").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromJohannesVoss(Strategy):
@@ -105,9 +143,9 @@ class RandomCardFromJohannesVoss(Strategy):
     def __str__(self):
         return "Let's fetch a card from Johannes Voss (@algenpfleger), I love this artist !"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(artist="Johannes Voss")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(artist="Johannes Voss").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromMagaliVilleneuve(Strategy):
@@ -118,9 +156,9 @@ class RandomCardFromMagaliVilleneuve(Strategy):
     def __str__(self):
         return "Let's fetch a card from Magali Villeneuve (@Cathaoir1), so talented !"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(artist="Magali Villeneuve")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(artist="Magali Villeneuve").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomCardFromWillianMurai(Strategy):
@@ -131,9 +169,9 @@ class RandomCardFromWillianMurai(Strategy):
     def __str__(self):
         return "Let's fetch a card from Willian Murai, I love this artist"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(artist="Willian Murai")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(artist="Willian Murai").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomRareCardFromAGivenSet(Strategy):
@@ -148,10 +186,9 @@ class RandomRareCardFromAGivenSet(Strategy):
     def __init__(self, card_set: str):
         self._card_set = card_set
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=self._card_set)
-                              .where(rarity='Rare')
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=self._card_set).where(rarity='Rare').all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomRareCard(Strategy):
@@ -162,10 +199,9 @@ class RandomRareCard(Strategy):
     def __str__(self):
         return "Let's fetch a random Rare card from a random set"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
-                              .where(rarity='Rare')
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=secrets.choice(Set.all()).code).where(rarity='Rare').all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomMythicCard(Strategy):
@@ -176,10 +212,9 @@ class RandomMythicCard(Strategy):
     def __str__(self):
         return "Let's fetch a random Mythic card from a random set"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
-                              .where(rarity='Mythic Rare')
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=secrets.choice(Set.all()).code).where(rarity='Mythic Rare').all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomPlaneswalkerCard(Strategy):
@@ -190,9 +225,9 @@ class RandomPlaneswalkerCard(Strategy):
     def __str__(self):
         return "Let's fetch a random Planeswalker card"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(type="Planeswalker")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(type="Planeswalker").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomRareCardFromInnistrad(Strategy):
@@ -203,10 +238,9 @@ class RandomRareCardFromInnistrad(Strategy):
     def __str__(self):
         return "Let's fetch a random rare cards from Innistrad sets"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set='isd|soi|emn')
-                              .where(rarity='Rare|Mythic Rare')
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set='isd|soi|emn').where(rarity='Rare|Mythic Rare').all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomVampireCard(Strategy):
@@ -217,9 +251,9 @@ class RandomVampireCard(Strategy):
     def __str__(self):
         return "Let's fetch a random Vampire card"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(subtypes="Vampire")
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(subtypes="Vampire").all())
+        return self._fetch_from_scryfall(card)
 
 
 class RandomUncommonCard(Strategy):
@@ -230,10 +264,9 @@ class RandomUncommonCard(Strategy):
     def __str__(self):
         return "Let's fetch a random Uncommon card from a random set"
 
-    def fetch_a_card(self) -> Card:
-        return secrets.choice(Card.where(set=secrets.choice(Set.all()).code)
-                              .where(rarity='Uncommon')
-                              .all())
+    def fetch_a_card(self) -> MTGCard:
+        card = secrets.choice(Card.where(set=secrets.choice(Set.all()).code).where(rarity='Uncommon').all())
+        return self._fetch_from_scryfall(card)
 
 
 class MTGCardFetcher:
@@ -250,9 +283,9 @@ class MTGCardFetcher:
         self._strategy = strategy
 
     @retry(reraise=True, wait=wait_random(min=3, max=6), stop=stop_after_attempt(NUMBER_OF_RETRIES))
-    def get_card(self) -> Card:
+    def get_card(self) -> MTGCard:
         returned_card = self._strategy.fetch_a_card()
-        if returned_card.image_url is None:
+        if not returned_card.card_data:
             LOGGER.error(f'No image URL for card {returned_card.name}, {returned_card.set_name}, pick a new one.')
             raise ValueError
         return returned_card
@@ -290,25 +323,19 @@ def lambda_handler(event, context):
     LOGGER.info('Starting this Lambda by fetching a MTG card')
     strategy = random_strategy()
     card = MTGCardFetcher(strategy=strategy).get_card()
-    card_key = f'{card.id}.jpg'
 
     LOGGER.info(f'Saving card image ({card.name}) into S3')
     s3.put_object(Bucket=BUCKET_NAME,
-                  Key=card_key,
-                  Body=requests.get(f'{card.image_url}').content)
+                  Key=card.card_filename,
+                  Body=card.card_data)
 
     LOGGER.info('Saving meta-data into SQS')
     sqs.send_message(QueueUrl=QUEUE_URL,
-                     MessageBody=card_key,
+                     MessageBody=card.card_filename,
                      MessageAttributes={
-                         'S3Bucket': {'StringValue': BUCKET_NAME,
-                                      'DataType': 'String'},
-                         'Name': {'StringValue': card.name,
-                                  'DataType': 'String'},
-                         'Author': {'StringValue': card.artist,
-                                    'DataType': 'String'},
-                         'Set': {'StringValue': card.set_name,
-                                 'DataType': 'String'},
-                         'Tweet': {'StringValue': f'{strategy} #Magic #MTG !',
-                                   'DataType': 'String'},
+                         'S3Bucket': {'StringValue': BUCKET_NAME, 'DataType': 'String'},
+                         'Name': {'StringValue': card.name, 'DataType': 'String'},
+                         'Author': {'StringValue': card.artist, 'DataType': 'String'},
+                         'Set': {'StringValue': card.set_name, 'DataType': 'String'},
+                         'Tweet': {'StringValue': f'{strategy} #Magic #MTG !', 'DataType': 'String'},
                      })

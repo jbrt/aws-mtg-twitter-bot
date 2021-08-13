@@ -2,21 +2,19 @@ from unittest import mock
 
 from src.fetching_card import *
 
-from mtgsdk import Card
-
 
 def test_strategy_fully_random_card():
     fetcher = MTGCardFetcher(strategy=FullyRandomCard())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
 
 
 def test_strategy_random_card_from_a_given_set():
     fetcher = MTGCardFetcher(strategy=RandomCardFromAGivenSet(card_set='KLD'))
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.set == 'KLD'
 
 
@@ -24,7 +22,7 @@ def test_strategy_random_card_from_chris_rallis():
     fetcher = MTGCardFetcher(strategy=RandomCardFromChrisRallis())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.artist == 'Chris Rallis'
 
 
@@ -32,7 +30,7 @@ def test_strategy_random_card_from_chase_stone():
     fetcher = MTGCardFetcher(strategy=RandomCardFromChaseStone())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.artist == 'Chase Stone'
 
 
@@ -40,7 +38,7 @@ def test_strategy_random_card_from_johannes_voss():
     fetcher = MTGCardFetcher(strategy=RandomCardFromJohannesVoss())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert 'Johannes Voss' in card.artist
 
 
@@ -48,7 +46,7 @@ def test_strategy_random_card_from_magali_villeneuve():
     fetcher = MTGCardFetcher(strategy=RandomCardFromMagaliVilleneuve())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.artist == 'Magali Villeneuve'
 
 
@@ -56,7 +54,7 @@ def test_strategy_random_card_from_willian_murai():
     fetcher = MTGCardFetcher(strategy=RandomCardFromWillianMurai())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.artist == 'Willian Murai'
 
 
@@ -64,7 +62,7 @@ def test_strategy_random_rare_card_from_a_given_set():
     fetcher = MTGCardFetcher(strategy=RandomRareCardFromAGivenSet(card_set='KLD'))
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.set == 'KLD'
     assert card.rarity == 'Rare'
 
@@ -73,7 +71,7 @@ def test_strategy_random_rare_card():
     fetcher = MTGCardFetcher(strategy=RandomRareCard())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.rarity == 'Rare'
 
 
@@ -90,7 +88,7 @@ def test_strategy_random_planes_walker_card():
     fetcher = MTGCardFetcher(strategy=RandomPlaneswalkerCard())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert 'Planeswalker' in card.type
 
 
@@ -98,7 +96,7 @@ def test_strategy_random_rare_card_from_innistrad():
     fetcher = MTGCardFetcher(strategy=RandomRareCardFromInnistrad())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.set in ('ISD', 'SOI', 'EMN')
     assert card.rarity in ('Rare', 'Mythic Rare')
 
@@ -107,7 +105,7 @@ def test_strategy_random_rare_vampire_card():
     fetcher = MTGCardFetcher(strategy=RandomVampireCard())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert 'Vampire' in card.subtypes
 
 
@@ -115,7 +113,7 @@ def test_strategy_random_uncommon_card():
     fetcher = MTGCardFetcher(strategy=RandomUncommonCard())
     card = fetcher.get_card()
 
-    assert isinstance(card, Card)
+    assert isinstance(card, MTGCard)
     assert card.rarity == 'Uncommon'
 
 
